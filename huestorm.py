@@ -16,11 +16,13 @@ from code import InteractiveConsole
 import audioop
 import random
 import wave
+import time
 
+import yaml
 import pyaudio  # from http://people.csail.mit.edu/hubert/pyaudio/
 from phue import Bridge, PhueRegistrationException, Light
 
-logger = logging.getLogger('huestorm')
+logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 __version__ = '0.1'
@@ -45,7 +47,7 @@ def find_light_by_name(name: str, bridge: Bridge) -> Light:
     """
     Query the bridge finding a matching light by name
     :param name: Name of light to match
-    :param bridge:
+    :param bridge: The Hue bridge
     :return:
     """
     for light in bridge.lights:
@@ -141,11 +143,12 @@ def hued_wav_file(sound_file: str, bridge: Bridge, light: Light):
     :param bridge:
     :return:
     """
-    chunk = 2048  # Change if too fast/slow, never less than 1024
-    scale = 50  # Change if too dim/bright
-    exponent = 6  # Change if too little/too much difference between loud and quiet sounds
+    chunk = 8192  # Change if too fast/slow, never less than 1024
+    scale = 50  # Change if too dim/bright  50
+    exponent = 4  # Change if too little/too much difference between loud and quiet sounds
 
-    bridge.set_light(light.light_id, {'on': True, 'bri': 100, 'transitiontime': 0})
+    bridge.set_light(light.light_id,
+                     {'on': True, 'bri': 0, 'sat': 1, 'transitiontime': 0})
 
     wf = wave.open(sound_file, 'rb')
     p = pyaudio.PyAudio()
@@ -155,7 +158,7 @@ def hued_wav_file(sound_file: str, bridge: Bridge, light: Light):
                     output=True)
 
     data = wf.readframes(chunk)
-
+    old_bright = 0
     try:
         while data != '':
             stream.write(data)
@@ -163,13 +166,17 @@ def hued_wav_file(sound_file: str, bridge: Bridge, light: Light):
             rms = audioop.rms(data, 2)
             level = min(rms / (2.0 ** 16) * scale, 1.0)
             level = level ** exponent
-            level = int(level * 255)
+            level = int(level * 254)
+            #print(level)
 
-            bright = level if (level > 0 and level <= 255) else 1
-            ttime = 4
+            bright = level if (level >= 0 and level <= 254) else 0
 
-            bridge.set_light(light.light_id,
-                             {'bri': bright, 'transitiontime': ttime, 'sat': random.randint(0, 128)})
+            diff = abs(old_bright-bright)
+            if diff > 50:
+                #print("update hue: %s" % diff)
+                bridge.set_light(light.light_id, {'bri': bright})
+
+            old_bright = bright
 
             # read in the next chunk of data
             data = wf.readframes(chunk)
@@ -178,40 +185,67 @@ def hued_wav_file(sound_file: str, bridge: Bridge, light: Light):
         stream.close()
         p.terminate()
 
+    bridge.set_light(light.light_id,
+                     {'on': False, 'bri': 0, 'sat': 0, 'transitiontime': 0})
+
+
+def load_config():
+    with open("config.yml", "r") as ymlfile:
+        cfg = yaml.load(ymlfile)
+    return cfg
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--list-audio-devices', help='List audio devices',
                         dest='print_audio_devices', action='store_true')
-    parser.add_argument('--host', help='The Hue Bridge IP',
-                        default=None)
-    parser.add_argument('--light-name', help='Name of a single light',
-                        default=None)
-    parser.add_argument('--audio-device', help='Specify the audio device (mic) to listen to',
-                        type=int, default=0)
-    parser.add_argument('--play', help='Play a wav sound with visual light effects')
-
+    parser.add_argument('--test-mic', action='store_true',
+                        help='Test using microphone and one light')
+    parser.add_argument('--test-sound', action='store_true',
+                        help='Test using audio file and one light')
     args = parser.parse_args()
-    logger.setLevel(logging.DEBUG)
 
-    # setup the bridge and light if specified
-    if not args.host is None:
-        bridge = hue_bridge_init(args.host)
-    assert bridge is not None
-
-    if not args.light_name is None:
-        light = find_light_by_name(args.light_name, bridge)
-
-    # start
     if args.print_audio_devices:
         print_audio_devices()
         exit(0)
-    elif args.play is not None:
-        hued_wav_file(args.play, bridge, light)
+
+    config = load_config()
+    # print(yaml.dump(config))
+    host = config['host']
+    sounds = config['sounds']
+    lights = config['lights']
+
+    bridge = hue_bridge_init(host)
+    assert bridge is not None, "bridge cannot be found"
+
+    if args.test_mic:
+        test_config = config['test_mode']
+        light = find_light_by_name(test_config['light'], bridge)
+        audio_input = test_config['audio_device']
+        hued_mic_input(audio_input, bridge, light)
         exit(0)
-    elif not args.host or not args.light_name or args.audio_device == 0:
-        parser.exit("--host, --light-name and --audio-device are required.")
-    else:
-        if not light:
-            raise Exception("Light name not found")
-        hued_mic_input(args.audio_device, bridge, light)
+
+    if args.test_sound:
+        test_config = config['test_mode']
+        light = find_light_by_name(test_config['light'], bridge)
+        sound_input = test_config['sound']
+        hued_wav_file(sound_input, bridge, light)
+        exit(0)
+
+    assert host is not None, "no host specified - must configure"
+    assert sounds is not None and len(sounds) > 0, "no sounds specified - need at least one"
+    assert lights is not None and len(lights) > 0, "no lights specified - need at least one"
+
+    # -------------- NORMAL START ---------------
+    RUNNING = True
+    while (RUNNING):
+        random_light = random.randint(0, len(lights)-1)
+        light = find_light_by_name(lights[random_light], bridge)
+        random_sound = random.randint(0, len(sounds)-1)
+        sound = sounds[random_sound]
+        #
+        logger.info("Play %s on %s", sound, light)
+        hued_wav_file(sound, bridge, light)
+        sleep = 10
+        logger.info("Sleeping %s secs", sleep)
+        time.sleep(sleep)

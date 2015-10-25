@@ -1,0 +1,20 @@
+#--light-name Office --audio-device 1
+
+host:
+  10.0.1.2
+
+test_mode:
+  audio_device: 0
+  light: Office
+  sound: sounds/witch.wav
+
+sounds:
+  - sounds/hammering.wav
+  - sounds/owl.wav
+  - sounds/thunder.wav
+  - sounds/witch.wav
+  - sounds/wolf.wav
+
+lights:
+  - Office
+  - Tv
