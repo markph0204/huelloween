@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-PyHueStorm by Mark Hurley - huestorm.py
+Huelloween by Mark Hurley - huelloween.py
 <<url>>
 
 <<license>>
@@ -167,13 +167,13 @@ def hued_wav_file(sound_file: str, bridge: Bridge, light: Light):
             level = min(rms / (2.0 ** 16) * scale, 1.0)
             level = level ** exponent
             level = int(level * 254)
-            #print(level)
+            # print(level)
 
             bright = level if (level >= 0 and level <= 254) else 0
 
-            diff = abs(old_bright-bright)
+            diff = abs(old_bright - bright)
             if diff > 50:
-                #print("update hue: %s" % diff)
+                # print("update hue: %s" % diff)
                 bridge.set_light(light.light_id, {'bri': bright})
 
             old_bright = bright
@@ -239,9 +239,9 @@ if __name__ == '__main__':
     # -------------- NORMAL START ---------------
     RUNNING = True
     while (RUNNING):
-        random_light = random.randint(0, len(lights)-1)
+        random_light = random.randint(0, len(lights) - 1)
         light = find_light_by_name(lights[random_light], bridge)
-        random_sound = random.randint(0, len(sounds)-1)
+        random_sound = random.randint(0, len(sounds) - 1)
         sound = sounds[random_sound]
         #
         logger.info("Play %s on %s", sound, light)
