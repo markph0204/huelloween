@@ -1,14 +1,14 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-'''
+"""
 PyHueStorm by Mark Hurley - huestorm.py
 <<url>>
 
 <<license>>
 
 <<description>>
-'''
+"""
 
 import argparse
 import logging
@@ -27,10 +27,10 @@ __version__ = '0.1'
 
 
 def print_audio_devices():
-    '''
+    """
     Print a list of available audio devices (microphones)
     :return:
-    '''
+    """
     p = pyaudio.PyAudio()
     i = 0
     n = p.get_device_count()
@@ -42,12 +42,12 @@ def print_audio_devices():
 
 
 def find_light_by_name(name: str, bridge: Bridge) -> Light:
-    '''
+    """
     Query the bridge finding a matching light by name
     :param name: Name of light to match
     :param bridge:
     :return:
-    '''
+    """
     for light in bridge.lights:
         if light.name == name:
             logger.info("Found light: " + light.name)
@@ -56,12 +56,12 @@ def find_light_by_name(name: str, bridge: Bridge) -> Light:
 
 
 def hue_bridge_init(host) -> Bridge:
-    '''
+    """
     Initializes the Hue Bridge
     Prompts to press Bridge button if first time
     :param host:
     :return:
-    '''
+    """
     while True:
         try:
             return Bridge(host)
@@ -72,13 +72,13 @@ def hue_bridge_init(host) -> Bridge:
 
 
 def hued_mic_input(input_device: int, bridge: Bridge, light: Light):
-    '''
+    """
     Hue light responds to mic audio input
     :param input_device:
     :param bridge:
     :param light:
     :return:
-    '''
+    """
     chunk = 2048  # Change if too fast/slow, never less than 1024
     scale = 100  # Change if too dim/bright
     exponent = 4  # Change if too little/too much difference between loud and quiet sounds
@@ -135,12 +135,12 @@ def hued_mic_input(input_device: int, bridge: Bridge, light: Light):
 
 
 def hued_wav_file(sound_file: str, bridge: Bridge, light: Light):
-    '''
+    """
     Hue light responds to WAV sound file
     :param sound_file:
     :param bridge:
     :return:
-    '''
+    """
     chunk = 2048  # Change if too fast/slow, never less than 1024
     scale = 50  # Change if too dim/bright
     exponent = 6  # Change if too little/too much difference between loud and quiet sounds
