@@ -144,8 +144,8 @@ def hued_wav_file(sound_file: str, bridge: Bridge, light: Light):
     :return:
     """
     chunk = 8192  # Change if too fast/slow, never less than 1024
-    scale = 50  # Change if too dim/bright  50
-    exponent = 4  # Change if too little/too much difference between loud and quiet sounds
+    scale = 20  # Change if too dim/bright  50
+    exponent = 5  # Change if too little/too much difference between loud and quiet sounds
 
     bridge.set_light(light.light_id,
                      {'on': True, 'bri': 0, 'sat': 1, 'transitiontime': 0})
@@ -169,13 +169,15 @@ def hued_wav_file(sound_file: str, bridge: Bridge, light: Light):
             level = int(level * 254)
             # print(level)
 
-            bright = level if (level >= 0 and level <= 254) else 0
+            # bright = level if (level >= 0 and level <= 254) else 1
+            bright = level
+            # print("%s | %s" % (level, bright))
 
             diff = abs(old_bright - bright)
-            if diff > 50:
-                # print("update hue: %s" % diff)
-                bridge.set_light(light.light_id, {'bri': bright})
-
+            if diff > 3:
+                print("update hue: %s" % diff)
+                bridge.set_light(light.light_id,
+                                 {'bri': bright, 'transitiontime': 0})
             old_bright = bright
 
             # read in the next chunk of data
