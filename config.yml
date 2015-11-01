@@ -6,7 +6,7 @@ host:
 test_mode:
   audio_device: 0
   light: Office
-  sound: sounds/witch.wav
+  sound: sounds/hammering.wav
 
 sounds:
   - sounds/hammering.wav
@@ -18,3 +18,6 @@ sounds:
 lights:
   - Office
   - Tv
+#  - Front door left
+#  - Front door right
+#  - Fireplace

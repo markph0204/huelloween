@@ -143,12 +143,12 @@ def hued_wav_file(sound_file: str, bridge: Bridge, light: Light):
     :param bridge:
     :return:
     """
-    chunk = 8192  # Change if too fast/slow, never less than 1024
-    scale = 20  # Change if too dim/bright  50
-    exponent = 5  # Change if too little/too much difference between loud and quiet sounds
+    chunk = 2048  # Change if too fast/slow, never less than 1024
+    scale = 10  # Change if too dim/bright  50
+    exponent = 2  # Change if too little/too much difference between loud and quiet sounds
 
     bridge.set_light(light.light_id,
-                     {'on': True, 'bri': 0, 'sat': 1, 'transitiontime': 0})
+                     {'on': True, 'bri': 0, 'sat': 0, 'transitiontime': 0})
 
     wf = wave.open(sound_file, 'rb')
     p = pyaudio.PyAudio()
@@ -172,10 +172,11 @@ def hued_wav_file(sound_file: str, bridge: Bridge, light: Light):
             # bright = level if (level >= 0 and level <= 254) else 1
             bright = level
             # print("%s | %s" % (level, bright))
+            # print("bright: %s" % bright)
 
-            diff = abs(old_bright - bright)
-            if diff > 3:
-                print("update hue: %s" % diff)
+            diff = old_bright - bright
+            if abs(diff) > 5:
+                # print("-> update hue: (%s-%s) %s" % (old_bright, bright, diff))
                 bridge.set_light(light.light_id,
                                  {'bri': bright, 'transitiontime': 0})
             old_bright = bright
