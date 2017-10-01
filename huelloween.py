@@ -218,6 +218,7 @@ if __name__ == '__main__':
     sounds = config['sounds']
     lights = config['lights']
 
+    logger.info("Attempting to set up your Phillips Hue Bridge")
     bridge = hue_bridge_init(host)
     assert bridge is not None, "bridge cannot be found"
 
