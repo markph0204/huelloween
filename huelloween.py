@@ -3,7 +3,7 @@
 
 """
 Huelloween by Mark Hurley - huelloween.py
-<<url>>
+https://github.com/markph0204/huelloween
 
 <<license>>
 
@@ -57,12 +57,12 @@ def find_light_by_name(name: str, bridge: Bridge) -> Light:
     return None
 
 
-def hue_bridge_init(host) -> Bridge:
+def hue_bridge_init(host: str) -> Bridge:
     """
     Initializes the Hue Bridge
     Prompts to press Bridge button if first time
-    :param host:
-    :return:
+    :param host: String as dotted quad
+    :return Bridge:
     """
     while True:
         try:
@@ -141,6 +141,7 @@ def hued_wav_file(sound_file: str, bridge: Bridge, light: Light):
     Hue light responds to WAV sound file
     :param sound_file:
     :param bridge:
+    :param light:
     :return:
     """
     chunk = 2048  # Change if too fast/slow, never less than 1024
@@ -187,6 +188,7 @@ def hued_wav_file(sound_file: str, bridge: Bridge, light: Light):
         stream.stop_stream()
         stream.close()
         p.terminate()
+        wf.close()
 
     bridge.set_light(light.light_id,
                      {'on': False, 'bri': 0, 'sat': 0, 'transitiontime': 0})
@@ -242,12 +244,12 @@ if __name__ == '__main__':
 
     # -------------- NORMAL START ---------------
     RUNNING = True
-    while (RUNNING):
+    while RUNNING:
         random_light = random.randint(0, len(lights) - 1)
         light = find_light_by_name(lights[random_light], bridge)
         random_sound = random.randint(0, len(sounds) - 1)
         sound = sounds[random_sound]
-        #
+
         logger.info("Play %s on %s", sound, light)
         hued_wav_file(sound, bridge, light)
         sleep = 10
