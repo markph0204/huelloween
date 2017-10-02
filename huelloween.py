@@ -160,7 +160,7 @@ def hued_wav_file(sound_file: str, bridge: Bridge, light: Light):
     data = wf.readframes(chunk)
     old_bright = 0
     try:
-        while data != '':
+        while len(data) != 0:
             stream.write(data)
 
             rms = audioop.rms(data, 2)
