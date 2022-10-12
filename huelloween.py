@@ -196,7 +196,7 @@ def hued_wav_file(sound_file: str, bridge: Bridge, light: Light):
 
 def load_config():
     with open("config.yml", "r") as ymlfile:
-        cfg = yaml.load(ymlfile)
+        cfg = yaml.safe_load(ymlfile)
     return cfg
 
 
